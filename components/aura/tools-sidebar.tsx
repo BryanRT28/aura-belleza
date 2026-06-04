@@ -76,7 +76,7 @@ export function ToolsSidebar({ onToolSelect, onToolHover }: ToolsSidebarProps) {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.6 }}
-      className="bg-card rounded-3xl p-6 border border-border"
+      className="relative z-30 overflow-visible bg-card rounded-3xl p-6 border border-border"
     >
       <h3 className="text-lg font-semibold text-foreground mb-6">Herramientas</h3>
 

@@ -44,7 +44,7 @@ export function TreatmentTooltip({ treatment, description, duration, recovery, c
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-popover text-popover-foreground border border-border p-4 rounded-2xl shadow-xl backdrop-blur-sm pointer-events-none"
+            className="absolute z-[9999] bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-popover text-popover-foreground border border-border p-4 rounded-2xl shadow-xl backdrop-blur-sm pointer-events-none"
           >
             <div className="space-y-2 text-left">
               <h5 className="font-semibold text-sm text-primary">{treatment}</h5>

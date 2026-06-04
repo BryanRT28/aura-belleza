@@ -1,13 +1,20 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X, Sun, Moon, Stethoscope } from 'lucide-react';
+import type { AppTheme } from '@/hooks/use-theme';
 import { useState } from 'react';
 
 interface NavbarProps {
-  theme?: 'experiencia' | 'consulta';
-  onThemeChange?: (theme: 'experiencia' | 'consulta') => void;
+  theme?: AppTheme;
+  onThemeChange?: (theme: AppTheme) => void;
 }
+
+const nextTheme: Record<AppTheme, AppTheme> = {
+  experiencia: 'consulta',
+  consulta: 'oscuro',
+  oscuro: 'experiencia',
+};
 
 export function Navbar({ theme = 'experiencia', onThemeChange }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,12 +52,20 @@ export function Navbar({ theme = 'experiencia', onThemeChange }: NavbarProps) {
             
             {/* Theme Toggle */}
             <button
-              onClick={() => onThemeChange?.(theme === 'experiencia' ? 'consulta' : 'experiencia')}
+              onClick={() => onThemeChange?.(nextTheme[theme])}
               className="p-2 hover:bg-secondary/20 rounded-full transition-colors"
-              title={theme === 'experiencia' ? 'Cambiar a Modo Clínica' : 'Cambiar a Modo Experiencia'}
+              title={
+                theme === 'experiencia'
+                  ? 'Cambiar a Modo Consulta'
+                  : theme === 'consulta'
+                  ? 'Cambiar a Modo Oscuro'
+                  : 'Cambiar a Modo Experiencia'
+              }
             >
               {theme === 'experiencia' ? (
                 <Sun size={20} className="text-primary" />
+              ) : theme === 'consulta' ? (
+                <Stethoscope size={20} className="text-primary" />
               ) : (
                 <Moon size={20} className="text-primary" />
               )}
@@ -91,18 +106,24 @@ export function Navbar({ theme = 'experiencia', onThemeChange }: NavbarProps) {
             {/* Theme Toggle Mobile */}
             <button
               onClick={() => {
-                onThemeChange?.(theme === 'experiencia' ? 'consulta' : 'experiencia');
+                onThemeChange?.(nextTheme[theme]);
                 handleNavClick();
               }}
               className="w-full py-2 px-4 flex items-center justify-between bg-secondary/10 hover:bg-secondary/20 rounded-3xl transition-colors"
             >
               <span className="text-sm font-medium text-foreground">
-                {theme === 'experiencia' ? 'Modo Experiencia' : 'Modo Clínica'}
+                {theme === 'experiencia'
+                  ? 'Modo Experiencia'
+                  : theme === 'consulta'
+                  ? 'Modo Consulta'
+                  : 'Modo Oscuro'}
               </span>
               {theme === 'experiencia' ? (
-                <Sun size={16} className="text-primary" />
+                <Sun size={20} className="text-primary" />
+              ) : theme === 'consulta' ? (
+                <Stethoscope size={20} className="text-primary" />
               ) : (
-                <Moon size={16} className="text-primary" />
+                <Moon size={20} className="text-primary" />
               )}
             </button>
             

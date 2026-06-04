@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Navbar } from './navbar';
 import { Hero } from './hero';
@@ -14,20 +14,27 @@ import { Footer } from './footer';
 import { AuraAIAssistant } from './ai-assistant';
 import { RecommendationCard } from './recommendation-card';
 import { ToastContainer, useToast } from './toast-container';
-import { useTheme } from '@/hooks/use-theme';
+import { AppTheme, useTheme } from '@/hooks/use-theme';
 
 export function AuraBelleza() {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'experiencia' | 'consulta'>('experiencia');
+  const [theme, setTheme] = useState<AppTheme>('experiencia');
   const [showRecommendations, setShowRecommendations] = useState(false);
   const { messages: toastMessages, addToast, removeToast } = useToast();
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('aura-theme') as AppTheme | null;
+
+    if (savedTheme) {
+      setTheme(savedTheme);
+    }
+  }, []);
+
   useTheme(theme);
 
   return (
-    <div className={`min-h-screen scroll-smooth transition-colors duration-300 ${
-      theme === 'consulta' ? 'bg-white' : 'bg-background'
-    }`}>
+      <div className="min-h-screen scroll-smooth bg-background text-foreground transition-colors duration-300">
       <Navbar theme={theme} onThemeChange={setTheme} />
       <Hero />
       <ServicesSection />
@@ -64,12 +71,12 @@ export function AuraBelleza() {
             className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6"
           >
             {/* Left Sidebar - Tools */}
-            <div className="lg:col-span-1 order-2 lg:order-1">
+            <div className="lg:col-span-1 order-2 lg:order-1 relative z-30 overflow-visible">
               <ToolsSidebar onToolSelect={setSelectedTool} onToolHover={setHoveredTool} />
             </div>
 
             {/* Right Column - Image Viewer */}
-            <div className="lg:col-span-3 order-1 lg:order-2">
+            <div className="lg:col-span-3 order-1 lg:order-2 relative z-0">
               <ImageViewer hoveredTool={hoveredTool} />
             </div>
           </motion.div>
