@@ -59,9 +59,9 @@ export function Hero() {
           >
             Descubre Nuestros Servicios
           </button>
-          <Button
-            variant="outline"
-            className="px-8 py-4 rounded-3xl border-white/30 text-white hover:bg-white/10 backdrop-blur-sm"
+          <Button 
+            className="!bg-[#d4af37] !text-[#2c2c2c] hover:!bg-[#bfa030] hover:!text-[#2c2c2c] font-semibold px-8 py-6 rounded-full shadow-lg transition-all duration-300 text-base"
+            onClick={() => window.location.hash = '#simulador'}
           >
             Agendar Cita
           </Button>

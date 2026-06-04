@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Upload, Eye, Lightbulb, RefreshCw } from 'lucide-react';
+import { Upload, Eye, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef } from 'react';
 import { ComparisonSlider } from './comparison-slider';
@@ -94,13 +94,13 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
     }
   };
 
+  // Función de reinicio profundo sin romper la UI
   const handleResetSimulator = () => {
     setImage(null);
     setSimulatedImage(null);
     setShowComparison(false);
     setIsProcessing(false);
     setShowAIInsights(false);
-    toast({ title: "Reiniciado", description: 'Simulador listo para un nuevo análisis' });
   };
 
   return (
@@ -165,12 +165,12 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
               />
             )}
 
-            {/* Image Display */}
+            {/* CÓDIGO ORIGINAL RECUPERADO DE LA VISUALIZACIÓN DE IMAGEN */}
             <div className="relative">
               {showComparison && simulatedImage ? (
                 <ComparisonSlider
-                  beforeImage={image || ""}
-                  afterImage={simulatedImage || ""}
+                  beforeImage={image ?? ""}
+                  afterImage={simulatedImage ?? ""}
                   title="Comparación de Simulación"
                 />
               ) : (
@@ -178,12 +178,19 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
                   <div className="relative aspect-square rounded-3xl overflow-hidden bg-background border border-border/30">
                     <motion.img
                       layoutId="main-image"
-                      src={image || undefined}
+                      src={image ?? undefined}
                       alt="Uploaded"
                       className="w-full h-full object-contain"
                     />
                     <FaceMappingOverlay isVisible={!!image} hoveredTool={hoveredTool ?? null} />
                   </div>
+                  {/* Botón original de la esquina superior derecha con reset profundo */}
+                  <button
+                    onClick={handleResetSimulator}
+                    className="absolute top-4 right-4 bg-background/80 backdrop-blur text-foreground p-2 rounded-full hover:bg-background transition-colors z-10"
+                  >
+                    <Upload size={20} className="rotate-90" />
+                  </button>
                 </>
               )}
             </div>
@@ -206,16 +213,6 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
               >
                 <Eye size={18} />
                 {showComparison ? 'Ocultar Comparación' : 'Comparar Antes/Después'}
-              </Button>
-
-              <Button
-                disabled={isProcessing}
-                onClick={handleResetSimulator}
-                variant="outline"
-                className="w-full px-4 py-6 mt-2 bg-transparent text-muted-foreground border border-border rounded-3xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-secondary hover:text-foreground transition-all duration-200"
-              >
-                <RefreshCw size={14} />
-                Subir otra fotografía / Regresar
               </Button>
             </div>
           </motion.div>
