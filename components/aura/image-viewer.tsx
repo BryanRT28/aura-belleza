@@ -1,12 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Upload, Eye, Lightbulb } from 'lucide-react';
+import { Upload, Eye, Lightbulb, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useRef } from 'react';
 import { ComparisonSlider } from './comparison-slider';
 import { ProcessingOverlay } from './processing-overlay';
-import { useToast } from './toast-container';
+import { useToast } from '@/components/ui/use-toast';
 import { FaceMappingOverlay } from './face-mapping';
 import { AIInsightsPanel } from './ai-insights';
 
@@ -22,12 +22,12 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAIInsights, setShowAIInsights] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { messages, addToast } = useToast();
+  const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && !file.type.startsWith('image/')) {
-      addToast('Por favor selecciona una imagen válida', 'error');
+      toast({ title: "Error", description: 'Por favor selecciona una imagen válida', variant: 'destructive' });
       return;
     }
     if (file) {
@@ -36,11 +36,11 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
         const result = event.target?.result;
         if (typeof result === 'string') {
           setImage(result);
-          addToast('Imagen cargada correctamente', 'success');
+          toast({ title: "Éxito", description: 'Imagen cargada correctamente' });
         }
       };
       reader.onerror = () => {
-        addToast('Error al leer la imagen', 'error');
+        toast({ title: "Error", description: 'Error al leer la imagen', variant: 'destructive' });
       };
       reader.readAsDataURL(file);
       onImageUpload?.(file);
@@ -57,16 +57,16 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
         const result = event.target?.result;
         if (typeof result === 'string') {
           setImage(result);
-          addToast('Imagen cargada correctamente', 'success');
+          toast({ title: "Éxito", description: 'Imagen cargada correctamente' });
         }
       };
       reader.onerror = () => {
-        addToast('Error al leer la imagen', 'error');
+        toast({ title: "Error", description: 'Error al leer la imagen', variant: 'destructive' });
       };
       reader.readAsDataURL(file);
       onImageUpload?.(file);
     } else {
-      addToast('Por favor arrastra una imagen válida', 'error');
+      toast({ title: "Error", description: 'Por favor arrastra una imagen válida', variant: 'destructive' });
     }
   };
 
@@ -80,7 +80,7 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
         setShowAIInsights(true);
       }
       setIsProcessing(false);
-      addToast('Simulación completada', 'success');
+      toast({ title: "Completado", description: 'Simulación completada con éxito' });
     }, 3000);
 
     return () => clearTimeout(timeoutId);
@@ -90,8 +90,17 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
     if (simulatedImage) {
       setShowComparison(!showComparison);
     } else {
-      addToast('Por favor, procesa la imagen primero', 'info');
+      toast({ title: "Información", description: 'Por favor, procesa la imagen primero' });
     }
+  };
+
+  const handleResetSimulator = () => {
+    setImage(null);
+    setSimulatedImage(null);
+    setShowComparison(false);
+    setIsProcessing(false);
+    setShowAIInsights(false);
+    toast({ title: "Reiniciado", description: 'Simulador listo para un nuevo análisis' });
   };
 
   return (
@@ -160,8 +169,8 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
             <div className="relative">
               {showComparison && simulatedImage ? (
                 <ComparisonSlider
-                  beforeImage={image}
-                  afterImage={simulatedImage}
+                  beforeImage={image || ""}
+                  afterImage={simulatedImage || ""}
                   title="Comparación de Simulación"
                 />
               ) : (
@@ -169,45 +178,45 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
                   <div className="relative aspect-square rounded-3xl overflow-hidden bg-background border border-border/30">
                     <motion.img
                       layoutId="main-image"
-                      src={image}
+                      src={image || undefined}
                       alt="Uploaded"
                       className="w-full h-full object-contain"
                     />
-                    <FaceMappingOverlay isVisible={!!image} hoveredTool={hoveredTool} />
+                    <FaceMappingOverlay isVisible={!!image} hoveredTool={hoveredTool ?? null} />
                   </div>
-                  <button
-                    onClick={() => setImage(null)}
-                    className="absolute top-4 right-4 bg-background/80 backdrop-blur text-foreground p-2 rounded-full hover:bg-background transition-colors"
-                  >
-                    <Upload size={20} className="rotate-90" />
-                  </button>
                 </>
               )}
             </div>
 
             {/* Action Buttons */}
             <div className="mt-6 space-y-3">
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleProcessing}
+              <Button
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-primary text-primary-foreground rounded-3xl font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
+                onClick={handleProcessing}
+                className="w-full px-4 py-6 bg-primary text-primary-foreground rounded-3xl font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Lightbulb size={18} />
                 {isProcessing ? 'Procesando...' : 'Procesar Simulación'}
-              </motion.button>
+              </Button>
 
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={handleComparison}
+              <Button
                 disabled={!simulatedImage}
-                className="w-full px-4 py-3 bg-secondary text-secondary-foreground rounded-3xl font-medium flex items-center justify-center gap-2 hover:bg-secondary/90 transition-colors disabled:opacity-50"
+                onClick={handleComparison}
+                className="w-full px-4 py-6 bg-secondary text-secondary-foreground rounded-3xl font-medium flex items-center justify-center gap-2 hover:bg-secondary/90 transition-colors disabled:opacity-50"
               >
                 <Eye size={18} />
                 {showComparison ? 'Ocultar Comparación' : 'Comparar Antes/Después'}
-              </motion.button>
+              </Button>
+
+              <Button
+                disabled={isProcessing}
+                onClick={handleResetSimulator}
+                variant="outline"
+                className="w-full px-4 py-6 mt-2 bg-transparent text-muted-foreground border border-border rounded-3xl text-sm font-medium flex items-center justify-center gap-2 hover:bg-secondary hover:text-foreground transition-all duration-200"
+              >
+                <RefreshCw size={14} />
+                Subir otra fotografía / Regresar
+              </Button>
             </div>
           </motion.div>
         )}

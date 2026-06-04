@@ -1,87 +1,53 @@
 'use client';
 
-import { SVGProps, memo } from 'react';
+import { motion } from 'framer-motion';
 
 interface FaceMappingOverlayProps {
   isVisible: boolean;
   hoveredTool: string | null;
 }
 
-const FaceMappingDot = memo(({ point, isActive }: any) => (
-  <circle
-    cx={point.cx}
-    cy={point.cy}
-    r={isActive ? '2.5' : '1.5'}
-    fill="#d4af37"
-    opacity={isActive ? 0.9 : 0.5}
-    className="transition-all duration-300 will-change-transform"
-    style={{
-      filter: isActive 
-        ? 'drop-shadow(0 0 4px rgba(212, 175, 55, 0.8)) drop-shadow(0 0 8px rgba(212, 175, 55, 0.4))' 
-        : 'drop-shadow(0 0 2px rgba(212, 175, 55, 0.4))',
-      backfaceVisibility: 'hidden',
-    }}
-  />
-));
-FaceMappingDot.displayName = 'FaceMappingDot';
-
 export function FaceMappingOverlay({ isVisible, hoveredTool }: FaceMappingOverlayProps) {
-  // Define facial mapping points - condensed to center on face region (adjusted to face proportions)
-  const foreheadPoints = [
-    { id: 'f1', cx: '50', cy: '25', label: 'Frente Centro' },
-    { id: 'f2', cx: '35', cy: '22', label: 'Frente Izquierda' },
-    { id: 'f3', cx: '65', cy: '22', label: 'Frente Derecha' },
-    { id: 'f4', cx: '40', cy: '32', label: 'Ceja Izquierda' },
-    { id: 'f5', cx: '60', cy: '32', label: 'Ceja Derecha' },
+  if (!isVisible) return null;
+
+  // Coordenadas simuladas agrupadas en el centro para evitar dispersión
+  const dots = [
+    { id: 1, cx: "45%", cy: "30%", area: "Botox" }, // Frente izquierda
+    { id: 2, cx: "55%", cy: "30%", area: "Botox" }, // Frente derecha
+    { id: 3, cx: "50%", cy: "35%", area: "Botox" }, // Entretejo
+    { id: 4, cx: "48%", cy: "48%", area: "Rinoplastia" }, // Tabique nasal
+    { id: 5, cx: "52%", cy: "52%", area: "Rinoplastia" }, // Punta nasal
+    { id: 6, cx: "38%", cy: "68%", area: "Mentoplastia" }, // Mandíbula izquierda
+    { id: 7, cx: "62%", cy: "68%", area: "Mandíbula derecha" }, // Mandíbula derecha
+    { id: 8, cx: "50%", cy: "74%", area: "Mentoplastia" }, // Mentón
   ];
-
-  const nosePoints = [
-    { id: 'n1', cx: '50', cy: '40', label: 'Puente Nasal' },
-    { id: 'n2', cx: '50', cy: '50', label: 'Punta Nasal' },
-  ];
-
-  const jawPoints = [
-    { id: 'j1', cx: '35', cy: '65', label: 'Mandíbula Izquierda' },
-    { id: 'j2', cx: '65', cy: '65', label: 'Mandíbula Derecha' },
-    { id: 'j3', cx: '50', cy: '72', label: 'Barbilla' },
-  ];
-
-  const cheekPoints = [
-    { id: 'c1', cx: '30', cy: '48', label: 'Mejilla Izquierda' },
-    { id: 'c2', cx: '70', cy: '48', label: 'Mejilla Derecha' },
-  ];
-
-  const getIsActive = (point: any) => {
-    if (!hoveredTool) return false;
-
-    switch (hoveredTool) {
-      case 'Botox':
-      case 'Lifting':
-        return foreheadPoints.some((p) => p.id === point.id);
-      case 'Rinoplastia':
-        return nosePoints.some((p) => p.id === point.id);
-      case 'Mentoplastia':
-        return jawPoints.some((p) => p.id === point.id);
-      default:
-        return false;
-    }
-  };
-
-  const allPoints = [...foreheadPoints, ...nosePoints, ...jawPoints, ...cheekPoints];
 
   return (
-    <svg
-      viewBox="0 0 100 100"
-      className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${
-        isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
-      }`}
-      preserveAspectRatio="xMidYMid slice"
-      style={{ zIndex: 10, backfaceVisibility: 'hidden' }}
-    >
-      {allPoints.map((point) => {
-        const isActive = getIsActive(point);
+    <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
+      {dots.map((dot) => {
+        // Lógica de iluminación activa condicional por hover
+        const isActive = hoveredTool === dot.area;
+        
         return (
-          <FaceMappingDot key={point.id} point={point} isActive={isActive} />
+          <g key={dot.id}>
+            {/* Halo de brillo sutil */}
+            <motion.circle
+              cx={dot.cx}
+              cy={dot.cy}
+              r={isActive ? 8 : 4}
+              className="transition-all duration-300"
+              fill={isActive ? "#d4af37" : "rgba(212, 175, 55, 0.4)"}
+              animate={isActive ? { scale: [1, 1.3, 1] } : {}}
+              transition={{ repeat: Infinity, duration: 2 }}
+            />
+            {/* Nodo central fino */}
+            <circle
+              cx={dot.cx}
+              cy={dot.cy}
+              r={2.5}
+              fill="#d4af37"
+            />
+          </g>
         );
       })}
     </svg>

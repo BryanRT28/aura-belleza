@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button';
 import { Menu, X, Sun, Moon } from 'lucide-react';
 import { useState } from 'react';
-import Link from 'next/link';
 
 interface NavbarProps {
   theme?: 'experiencia' | 'consulta';
@@ -57,7 +56,11 @@ export function Navbar({ theme = 'experiencia', onThemeChange }: NavbarProps) {
               )}
             </button>
             
-            <Button className="bg-primary text-white hover:bg-primary/90 rounded-3xl px-8 font-semibold shadow-md">
+            {/* BOTÓN DESKTOP CORREGIDO A DORADO PREMIUM FORZADO */}
+            <Button 
+              className="!bg-[#d4af37] !text-[#2c2c2c] hover:!bg-[#bfa030] hover:!text-[#2c2c2c] font-semibold px-6 py-2 rounded-full shadow-md transition-all duration-300 opacity-100 block"
+              onClick={() => window.location.hash = '#simulador'}
+            >
               Agendar Cita
             </Button>
           </div>
@@ -103,7 +106,14 @@ export function Navbar({ theme = 'experiencia', onThemeChange }: NavbarProps) {
               )}
             </button>
             
-            <Button className="w-full bg-primary text-white hover:bg-primary/90 rounded-3xl font-semibold shadow-md">
+            {/* BOTÓN MOBILE CORRECTO */}
+            <Button 
+              className="w-full !bg-[#d4af37] !text-[#2c2c2c] hover:!bg-[#bfa030] hover:!text-[#2c2c2c] font-semibold px-6 py-2 rounded-full shadow-md transition-all duration-300 opacity-100 block"
+              onClick={() => {
+                window.location.hash = '#simulador';
+                handleNavClick();
+              }}
+            >
               Agendar Cita
             </Button>
           </div>
