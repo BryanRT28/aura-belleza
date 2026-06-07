@@ -220,7 +220,10 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
       </AnimatePresence>
 
       {/* AI Insights Panel */}
-      <AIInsightsPanel isVisible={showAIInsights} />
+      <AIInsightsPanel
+        isVisible={showAIInsights}
+        onClose={() => setShowAIInsights(false)}
+      />
     </motion.div>
   );
 }

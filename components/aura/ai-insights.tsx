@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 
 interface AIInsightsPanelProps {
   isVisible: boolean;
+  onClose: () => void;
 }
 
-export function AIInsightsPanel({ isVisible }: AIInsightsPanelProps) {
+export function AIInsightsPanel({ isVisible, onClose }: AIInsightsPanelProps) {
   const metrics = [
     { label: 'Armonía Facial', value: 92, color: 'bg-primary' },
     { label: 'Simetría Izquierda/Derecha', value: 89, color: 'bg-primary' },
@@ -23,6 +24,12 @@ export function AIInsightsPanel({ isVisible }: AIInsightsPanelProps) {
       style={{ willChange: 'transform' }}
     >
       <div className="mb-6">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground"
+        >
+          ✕
+        </button>
         <h3 className="text-lg font-bold text-foreground mb-1">Análisis de Simetría IA</h3>
         <p className="text-xs text-muted-foreground">Escaneo completo</p>
       </div>
