@@ -55,11 +55,12 @@ const toolCategories = [
 ];
 
 interface ToolsSidebarProps {
+  selectedTool?: string | null;
   onToolSelect?: (tool: string) => void;
   onToolHover?: (tool: string | null) => void;
 }
 
-export function ToolsSidebar({ onToolSelect, onToolHover }: ToolsSidebarProps) {
+export function ToolsSidebar({ selectedTool, onToolSelect, onToolHover }: ToolsSidebarProps) {
   const { addToast } = useToast();
 
   const handleToolClick = (toolName: string) => {
@@ -91,6 +92,7 @@ export function ToolsSidebar({ onToolSelect, onToolHover }: ToolsSidebarProps) {
                 <motion.div
                   key={tool.name}
                   className="relative group"
+                  animate={{ scale: selectedTool === tool.name ? 1.02 : 1 }}
                 >
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -98,7 +100,12 @@ export function ToolsSidebar({ onToolSelect, onToolHover }: ToolsSidebarProps) {
                     onClick={() => handleToolClick(tool.name)}
                     onMouseEnter={() => onToolHover?.(tool.name)}
                     onMouseLeave={() => onToolHover?.(null)}
-                    className="w-full px-4 py-3 bg-background text-foreground border-2 border-border rounded-3xl hover:border-primary hover:text-primary transition-all duration-300 text-sm font-medium flex items-center justify-between group"
+                    aria-pressed={selectedTool === tool.name}
+                    className={`w-full px-4 py-3 border-2 rounded-3xl transition-all duration-300 text-sm font-medium flex items-center justify-between group ${
+                      selectedTool === tool.name
+                        ? 'bg-background border-primary text-primary shadow-md'
+                        : 'bg-background text-foreground border-border hover:border-primary hover:text-primary'
+                    }`}
                   >
                     <span>{tool.name}</span>
                     <TreatmentTooltip

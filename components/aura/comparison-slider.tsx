@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 interface ComparisonSliderProps {
@@ -18,43 +18,27 @@ export function ComparisonSlider({
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseDown = () => {
-    setIsDragging(true);
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!isDragging || !containerRef.current) return;
-
+  const updatePosition = (clientX: number) => {
+    if (!containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const percentage = (x / rect.width) * 100;
+    const percentage = ((clientX - rect.left) / rect.width) * 100;
     setSliderPosition(Math.max(0, Math.min(100, percentage)));
   };
 
-  useEffect(() => {
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.setPointerCapture(e.pointerId);
+    setIsDragging(true);
+    updatePosition(e.clientX);
+  };
+
+  const handlePointerUp = () => {
+    setIsDragging(false);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
     if (!isDragging) return;
-
-    const handleMouseUp = () => setIsDragging(false);
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const percentage = (x / rect.width) * 100;
-      setSliderPosition(Math.max(0, Math.min(100, percentage)));
-    };
-
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [isDragging]);
+    updatePosition(e.clientX);
+  };
 
   return (
     <div className="w-full space-y-3">
@@ -70,8 +54,10 @@ export function ComparisonSlider({
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
         className="relative w-full rounded-3xl overflow-hidden cursor-col-resize select-none bg-background border border-border shadow-lg touch-none"
       >
         {/* After Image (Background) */}
@@ -83,13 +69,14 @@ export function ComparisonSlider({
 
         {/* Before Image (Overlay) */}
         <div
-          style={{ width: `${100 - sliderPosition}%` }}
-          className="absolute top-0 left-0 h-full overflow-hidden"
+          style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+          className="absolute inset-0 overflow-hidden"
         >
           <img
             src={beforeImage}
             alt="Antes"
-            className="w-screen h-full object-cover"
+            draggable={false}
+            className="w-full h-full object-cover"
           />
         </div>
 
@@ -97,14 +84,6 @@ export function ComparisonSlider({
         <motion.div
           style={{ left: `${sliderPosition}%` }}
           className="absolute top-0 h-full w-1 bg-primary shadow-lg transform -translate-x-1/2"
-          drag="x"
-          dragElastic={false}
-          onDrag={(_, info) => {
-            if (!containerRef.current) return;
-            const rect = containerRef.current.getBoundingClientRect();
-            const percentage = ((info.point.x - rect.left) / rect.width) * 100;
-            setSliderPosition(Math.max(0, Math.min(100, percentage)));
-          }}
         >
           {/* Handle Icon */}
           <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-primary rounded-full shadow-md flex items-center justify-center -ml-4">

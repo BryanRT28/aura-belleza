@@ -23,10 +23,12 @@ const treatments = [
 ];
 
 interface TreatmentsCatalogProps {
+  selectedTreatment?: string | null;
   onTreatmentSelect?: (treatment: string) => void;
 }
 
 export function TreatmentsCatalog({
+  selectedTreatment,
   onTreatmentSelect,
 }: TreatmentsCatalogProps) {
   return (
@@ -46,33 +48,47 @@ export function TreatmentsCatalog({
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {treatments.map((treatment, index) => (
+          {treatments.map((treatment, index) => {
+            const isSelected = selectedTreatment === treatment.name;
+
+            return (
             <motion.div
               key={treatment.name}
               initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1 }}
+              animate={{ y: isSelected ? -4 : 0 }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
               viewport={{ once: true }}
               whileHover={{ y: -4 }}
             >
-              <Card onClick={() => { onTreatmentSelect?.(treatment.name); 
-                document .getElementById('espejo-inteligente')
-                ?.scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'start',
-                });
-              }}
-              className="bg-card border border-border rounded-3xl p-6 h-full cursor-pointer hover:border-primary transition-all duration-300">
-                <h3 className="text-lg font-semibold text-foreground mb-2">
+              <Card
+                role="button"
+                tabIndex={0}
+                aria-pressed={isSelected}
+                onClick={() => onTreatmentSelect?.(treatment.name)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onTreatmentSelect?.(treatment.name);
+                  }
+                }}
+                className={`border rounded-3xl p-6 h-full cursor-pointer transition-all duration-300 ${
+                  isSelected
+                    ? 'bg-primary/5 border-primary shadow-lg'
+                    : 'bg-card border-border hover:border-primary hover:bg-primary/5'
+                }`}
+              >
+                <h3 className={`text-lg font-semibold mb-2 ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                   {treatment.name}
                 </h3>
                 <p className="text-sm text-muted-foreground">
                   {treatment.description}
                 </p>
-                <div className="mt-4 w-12 h-1 bg-primary rounded-full" />
+                <div className={`mt-4 h-1 bg-primary rounded-full transition-all duration-300 ${isSelected ? 'w-20' : 'w-12'}`} />
               </Card>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
