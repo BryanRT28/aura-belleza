@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Tabla de Usuarios / Pacientes
+model Paciente {
+  id             Int          @id @default(autoincrement())
+  nombre         String
+  correo         String       @unique
+  telefono       String?
+  fechaRegistro  DateTime     @default(now())
+  
+  citas          Cita[]
+  simulaciones   Simulacion[]
+}
+
+// Tabla de Empleados (Especialistas de Aura Belleza)
+model Empleado {
+  id           Int       @id @default(autoincrement())
+  nombre       String    
+  rol          String    
+  
+  citas        Cita[]
+}
+
+// Tabla de Citas Médicas
+model Cita {
+  id           Int       @id @default(autoincrement())
+  fecha        DateTime
+  hora         String
+  tratamiento  String
+  estado       String    @default("Pendiente") 
+  
+  pacienteId   Int
+  paciente     Paciente  @relation(fields: [pacienteId], references: [id])
+  
+  empleadoId   Int?
+  empleado     Empleado? @relation(fields: [empleadoId], references: [id])
+}
+
+// Historial de Simulaciones
+model Simulacion {
+  id                 Int      @id @default(autoincrement())
+  tratamiento        String   
+  imagenOriginalUrl  String   
+  imagenProcesadaUrl String   
+  fechaSimulacion    DateTime @default(now())
+
+  pacienteId         Int
+  paciente           Paciente @relation(fields: [pacienteId], references: [id])
+}
