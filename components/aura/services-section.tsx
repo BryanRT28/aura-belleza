@@ -1,23 +1,29 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Sparkles, Droplets, Leaf } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, Droplets, Leaf } from 'lucide-react';
 
 const services = [
   {
     icon: Sparkles,
     title: 'Cuidado de Piel',
-    description: 'Tratamientos avanzados para rejuvenecimiento, hidratación y renovación de la piel con tecnología de punta.'
+    label: 'Piel saludable',
+    benefits: ['Evaluación personalizada', 'Resultados naturales'],
+    description: 'Tratamientos avanzados para rejuvenecimiento, hidratación y renovación de la piel con tecnología de punta.',
   },
   {
     icon: Droplets,
     title: 'Esculpido Facial',
-    description: 'Procedimientos profesionales para mejorar facciones, proporciones y armonía facial de forma natural.'
+    label: 'Armonía facial',
+    benefits: ['Simulación previa', 'Enfoque proporcional'],
+    description: 'Procedimientos profesionales para mejorar facciones, proporciones y armonía facial de forma natural.',
   },
   {
     icon: Leaf,
     title: 'Bienestar Capilar',
-    description: 'Soluciones integrales para fortalecimiento, restauración y cuidado del cabello con técnicas innovadoras.'
+    label: 'Cuidado integral',
+    benefits: ['Diagnóstico visual', 'Plan personalizado'],
+    description: 'Soluciones integrales para fortalecimiento, restauración y cuidado del cabello con técnicas innovadoras.',
   },
 ];
 
@@ -57,8 +63,8 @@ export function ServicesSection() {
             Nuestros Servicios
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Ofrecemos una variedad de tratamientos estéticos diseñados para resaltar tu belleza natural
-            con los más altos estándares de profesionalismo y cuidado.
+            Ofrecemos tratamientos estéticos diseñados para resaltar tu belleza natural
+            con altos estándares de profesionalismo y cuidado.
           </p>
         </motion.div>
 
@@ -76,11 +82,16 @@ export function ServicesSection() {
               <motion.div
                 key={index}
                 variants={cardVariants}
-                className="group bg-card border border-border rounded-3xl p-8 hover:border-primary hover:shadow-lg hover:shadow-primary/10 transition-all duration-300"
+                whileHover={{ y: -6 }}
+                className="group relative overflow-hidden bg-card border border-border rounded-3xl p-8 hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300"
               >
-                {/* Icon */}
-                <div className="mb-6 p-4 bg-secondary/20 rounded-2xl w-fit group-hover:bg-primary/10 transition-colors duration-300">
-                  <Icon className="w-8 h-8 text-primary" />
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div className="p-4 bg-secondary/20 rounded-2xl w-fit group-hover:bg-primary/10 transition-colors duration-300">
+                    <Icon className="w-8 h-8 text-primary" />
+                  </div>
+                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                    {service.label}
+                  </span>
                 </div>
 
                 {/* Title */}
@@ -93,15 +104,28 @@ export function ServicesSection() {
                   {service.description}
                 </p>
 
+                <ul className="mt-5 space-y-2">
+                  {service.benefits.map((benefit) => (
+                    <li key={benefit} className="flex items-center gap-2 text-sm text-foreground/80">
+                      <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary">
+                        <Check size={12} strokeWidth={3} />
+                      </span>
+                      {benefit}
+                    </li>
+                  ))}
+                </ul>
+
                 {/* Learn More Link */}
                 <motion.a
                   whileHover={{ x: 4 }}
-                  href="#"
-                  className="inline-flex items-center text-primary font-medium mt-6 text-sm gap-2"
+                  href="#tratamientos"
+                  aria-label={`Explorar tratamientos de ${service.title}`}
+                  className="inline-flex items-center text-primary font-semibold mt-7 text-sm gap-2"
                 >
-                  Conocer más
-                  <span>→</span>
+                  Explorar tratamientos
+                  <ArrowRight size={16} />
                 </motion.a>
+                <div className="absolute bottom-0 left-8 w-12 h-1 rounded-full bg-primary transition-all duration-300 group-hover:w-24" />
               </motion.div>
             );
           })}

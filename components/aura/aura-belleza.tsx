@@ -75,7 +75,11 @@ export function AuraBelleza() {
             >
               {/* Left Sidebar - Tools */}
               <div className="lg:col-span-1 order-2 lg:order-1 relative z-30 overflow-visible">
-                <ToolsSidebar onToolSelect={setSelectedTool} onToolHover={setHoveredTool} />
+                <ToolsSidebar
+                  selectedTool={selectedTool}
+                  onToolSelect={setSelectedTool}
+                  onToolHover={setHoveredTool}
+                />
               </div>
 
               {/* Right Column - Image Viewer */}
@@ -103,7 +107,10 @@ export function AuraBelleza() {
           </div>
         </section>
 
-        <TreatmentsCatalog />
+        <TreatmentsCatalog
+          selectedTreatment={selectedTool}
+          onTreatmentSelect={setSelectedTool}
+        />
         <Footer />
 
         {/* AI Assistant Chatbot */}
