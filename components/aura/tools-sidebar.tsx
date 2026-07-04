@@ -5,6 +5,7 @@ import { Zap, Save } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { TreatmentTooltip } from './treatment-tooltip';
 import { useToast } from './toast-container';
+import { useAura } from '@/context/AuraContext';
 
 const toolCategories = [
   {
@@ -61,9 +62,12 @@ interface ToolsSidebarProps {
 
 export function ToolsSidebar({ onToolSelect, onToolHover }: ToolsSidebarProps) {
   const { addToast } = useToast();
+  const { setSelectedTreatment } = useAura();
 
   const handleToolClick = (toolName: string) => {
     onToolSelect?.(toolName);
+    setSelectedTreatment(toolName);
+    
     addToast(`Simulación de ${toolName} aplicando...`, 'success');
   };
 

@@ -9,10 +9,11 @@ import { ProcessingOverlay } from './processing-overlay';
 import { useToast } from '@/components/ui/use-toast';
 import { FaceMappingOverlay } from './face-mapping';
 import { AIInsightsPanel } from './ai-insights';
+import { useAura } from '@/context/AuraContext';
 
 interface ImageViewerProps {
   onImageUpload?: (file: File) => void;
-  selectedTreatment?: string | null;
+  selectedTreatmentProp?: string | null;
   hoveredTool?: string | null;
 }
 
@@ -22,7 +23,7 @@ type SimulationResponse = {
   error?: string;
 };
 
-export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: ImageViewerProps) {
+export function ImageViewer({ onImageUpload, selectedTreatmentProp, hoveredTool }: ImageViewerProps) {
   const [image, setImage] = useState<string | null>(null);
   const [simulatedImage, setSimulatedImage] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
@@ -30,6 +31,8 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
   const [showAIInsights, setShowAIInsights] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  const { selectedTreatment } = useAura();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,7 +81,7 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
   };
 
   const handleProcessing = async () => {
-    const treatment = selectedTreatment ?? hoveredTool;
+    const treatment = selectedTreatment || selectedTreatmentProp || hoveredTool;
 
     if (!image) {
       toast({ title: "Información", description: 'Por favor, carga una imagen primero' });

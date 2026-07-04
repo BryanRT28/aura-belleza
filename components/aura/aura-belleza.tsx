@@ -80,7 +80,7 @@ export function AuraBelleza() {
 
               {/* Right Column - Image Viewer */}
               <div className="lg:col-span-3 order-1 lg:order-2 relative z-0">
-                <ImageViewer selectedTreatment={selectedTool} hoveredTool={hoveredTool} />
+                <ImageViewer selectedTreatmentProp={selectedTool} hoveredTool={hoveredTool} />
               </div>
             </motion.div>
 
@@ -103,7 +103,7 @@ export function AuraBelleza() {
           </div>
         </section>
 
-        <TreatmentsCatalog onTreatmentSelect={setSelectedTool}/>
+        <TreatmentsCatalog />
         <Footer />
 
         {/* AI Assistant Chatbot */}

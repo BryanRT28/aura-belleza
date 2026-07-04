@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
+import { useAura } from '@/context/AuraContext';
 
 const treatments = [
   {
@@ -22,13 +23,9 @@ const treatments = [
   },
 ];
 
-interface TreatmentsCatalogProps {
-  onTreatmentSelect?: (treatment: string) => void;
-}
+export function TreatmentsCatalog() {
+  const { setSelectedTreatment } = useAura();
 
-export function TreatmentsCatalog({
-  onTreatmentSelect,
-}: TreatmentsCatalogProps) {
   return (
     <section
       id="tratamientos"
@@ -55,7 +52,7 @@ export function TreatmentsCatalog({
               viewport={{ once: true }}
               whileHover={{ y: -4 }}
             >
-              <Card onClick={() => { onTreatmentSelect?.(treatment.name); 
+              <Card onClick={() => { setSelectedTreatment(treatment.name); 
                 document .getElementById('espejo-inteligente')
                 ?.scrollIntoView({
                   behavior: 'smooth',
