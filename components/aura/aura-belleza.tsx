@@ -77,7 +77,7 @@ export function AuraBelleza() {
 
             {/* Right Column - Image Viewer */}
             <div className="lg:col-span-3 order-1 lg:order-2 relative z-0">
-              <ImageViewer hoveredTool={hoveredTool} />
+              <ImageViewer selectedTreatment={selectedTool} hoveredTool={hoveredTool} />
             </div>
           </motion.div>
 

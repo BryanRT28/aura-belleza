@@ -12,10 +12,17 @@ import { AIInsightsPanel } from './ai-insights';
 
 interface ImageViewerProps {
   onImageUpload?: (file: File) => void;
+  selectedTreatment?: string | null;
   hoveredTool?: string | null;
 }
 
-export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
+type SimulationResponse = {
+  ok?: boolean;
+  resultImageUrl?: string;
+  error?: string;
+};
+
+export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: ImageViewerProps) {
   const [image, setImage] = useState<string | null>(null);
   const [simulatedImage, setSimulatedImage] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
@@ -70,20 +77,54 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
     }
   };
 
-  const handleProcessing = () => {
+  const handleProcessing = async () => {
+    const treatment = selectedTreatment ?? hoveredTool;
+
+    if (!image) {
+      toast({ title: "Información", description: 'Por favor, carga una imagen primero' });
+      return;
+    }
+
+    if (!treatment) {
+      toast({ title: "Información", description: 'Selecciona un tratamiento antes de procesar' });
+      return;
+    }
+
     setIsProcessing(true);
     setShowAIInsights(false);
-    
-    const timeoutId = setTimeout(() => {
-      if (image) {
-        setSimulatedImage(image);
-        setShowAIInsights(true);
-      }
-      setIsProcessing(false);
-      toast({ title: "Completado", description: 'Simulación completada con éxito' });
-    }, 3000);
 
-    return () => clearTimeout(timeoutId);
+    try {
+      // Para produccion, image deberia ser una URL publica de Cloudinary o similar.
+      // Replicate necesita poder descargar la imagen desde su backend.
+      const response = await fetch('/api/ai/simulate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageUrl: image,
+          treatment,
+        }),
+      });
+
+      const data = (await response.json()) as SimulationResponse;
+
+      if (!response.ok || !data.ok || !data.resultImageUrl) {
+        throw new Error(data.error || 'Error al procesar la imagen');
+      }
+
+      setSimulatedImage(data.resultImageUrl);
+      setShowComparison(true);
+      setShowAIInsights(true);
+      toast({ title: "Completado", description: 'Simulación completada con éxito' });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Error al procesar la imagen';
+
+      toast({ title: "Error", description: message, variant: 'destructive' });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleComparison = () => {
@@ -161,7 +202,6 @@ export function ImageViewer({ onImageUpload, hoveredTool }: ImageViewerProps) {
             {isProcessing && (
               <ProcessingOverlay
                 isVisible={isProcessing}
-                onComplete={() => setIsProcessing(false)}
               />
             )}
 

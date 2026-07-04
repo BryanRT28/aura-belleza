@@ -35,10 +35,10 @@ export function ProcessingOverlay({
   }, []);
 
   useEffect(() => {
-    if (!isVisible || !mounted) return;
+    if (!isVisible || !mounted || !onComplete) return;
 
     const timer = setTimeout(() => {
-      onComplete?.();
+      onComplete();
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -117,7 +117,7 @@ export function ProcessingOverlay({
         >
           <motion.div
             animate={{ width: ['0%', '100%'] }}
-            transition={{ duration: 2.8, ease: 'easeInOut' }}
+            transition={{ duration: 2.8, ease: 'easeInOut', repeat: Infinity }}
             className="h-full bg-primary"
             style={{ backfaceVisibility: 'hidden' }}
           />
