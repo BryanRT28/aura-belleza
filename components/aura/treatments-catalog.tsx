@@ -22,7 +22,13 @@ const treatments = [
   },
 ];
 
-export function TreatmentsCatalog() {
+interface TreatmentsCatalogProps {
+  onTreatmentSelect?: (treatment: string) => void;
+}
+
+export function TreatmentsCatalog({
+  onTreatmentSelect,
+}: TreatmentsCatalogProps) {
   return (
     <section
       id="tratamientos"
@@ -49,7 +55,14 @@ export function TreatmentsCatalog() {
               viewport={{ once: true }}
               whileHover={{ y: -4 }}
             >
-              <Card className="bg-card border border-border rounded-3xl p-6 h-full">
+              <Card onClick={() => { onTreatmentSelect?.(treatment.name); 
+                document .getElementById('espejo-inteligente')
+                ?.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'start',
+                });
+              }}
+              className="bg-card border border-border rounded-3xl p-6 h-full cursor-pointer hover:border-primary transition-all duration-300">
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                   {treatment.name}
                 </h3>
