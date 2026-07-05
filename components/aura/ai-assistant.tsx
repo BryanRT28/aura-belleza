@@ -35,32 +35,55 @@ export function AuraAIAssistant() {
   ]);
   const [input, setInput] = useState('');
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!input.trim()) return;
 
+    const userText = input; // Guardamos el texto antes de limpiar el input
     const userMessage: Message = {
       id: `msg-user-${++messageCounter}`,
-      text: input,
+      text: userText,
       sender: 'user',
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput('');
+    setInput(''); // Limpiamos la caja de texto rápidamente para buena UX
 
-    // Simulate bot response
-    setTimeout(() => {
+    try {
+      // Conexión real con tu backend
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: userText,
+          history: messages,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error);
+
       const botMessage: Message = {
         id: `msg-bot-${++messageCounter}`,
-        text: `He entendido que te interesa ${input}. ¿Deseas ver una simulación o conocer más detalles?`,
+        text: data.reply,
         sender: 'bot',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
-    }, 500);
+    } catch (error) {
+      console.error("Error al conectar con la IA:", error);
+      const errorMessage: Message = {
+        id: `msg-bot-${++messageCounter}`,
+        text: "Lo siento, tuve un problema de conexión. ¿Podemos intentarlo de nuevo?",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
-  const handleQuickResponse = (treatment: string) => {
+  const handleQuickResponse = async (treatment: string) => {
     const userMessage: Message = {
       id: `msg-user-${++messageCounter}`,
       text: treatment,
@@ -70,15 +93,39 @@ export function AuraAIAssistant() {
 
     setMessages((prev) => [...prev, userMessage]);
 
-    setTimeout(() => {
+    try {
+      // Conexión real enviando el tratamiento como contexto extra
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: treatment,
+          history: messages,
+          selectedTreatment: treatment,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) throw new Error(data.error);
+
       const botMessage: Message = {
         id: `msg-bot-${++messageCounter}`,
-        text: `Excelente elección. ${treatment} es un tratamiento muy popular. Selecciona el tratamiento en la barra lateral para ver la simulación.`,
+        text: data.reply,
         sender: 'bot',
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, botMessage]);
-    }, 500);
+    } catch (error) {
+      console.error("Error al conectar con la IA:", error);
+      const errorMessage: Message = {
+        id: `msg-bot-${++messageCounter}`,
+        text: "Lo siento, tuve un problema de conexión. ¿Podemos intentarlo de nuevo?",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
   return (
@@ -122,7 +169,8 @@ export function AuraAIAssistant() {
                         : 'bg-secondary text-secondary-foreground'
                     }`}
                   >
-                    <p className="text-sm">{msg.text}</p>
+                    {/* Renderizamos Markdown básico si es necesario o texto plano */}
+                    <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                   </div>
                 </motion.div>
               ))}
