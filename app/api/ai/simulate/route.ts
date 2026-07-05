@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -14,6 +13,7 @@ type ReplicatePrediction = {
   status?: string;
   output?: string | string[] | null;
   error?: string | null;
+  detail?: string | null;
   urls?: {
     get?: string;
   };
@@ -68,7 +68,15 @@ function sleep(ms: number) {
 }
 
 function replicateErrorMessage(data: ReplicatePrediction, fallback: string) {
-  return typeof data.error === 'string' && data.error.length > 0 ? data.error : fallback;
+  if (typeof data.error === 'string' && data.error.length > 0) {
+    return data.error;
+  }
+
+  if (typeof data.detail === 'string' && data.detail.length > 0) {
+    return data.detail;
+  }
+
+  return fallback;
 }
 
 async function parseReplicateResponse(response: Response) {
@@ -102,16 +110,21 @@ export async function POST(request: Request) {
     const body = (await request.json()) as {
       imageUrl?: unknown;
       treatment?: unknown;
-      pacienteId?: unknown;
     };
 
     const imageUrl = typeof body.imageUrl === 'string' ? body.imageUrl.trim() : '';
     const treatment = typeof body.treatment === 'string' ? body.treatment.trim() : '';
-    const pacienteId = typeof body.pacienteId === 'number' ? body.pacienteId : 1;
 
     if (!imageUrl || !treatment) {
       return NextResponse.json(
         { ok: false, error: 'Falta imageUrl o treatment' },
+        { status: 400 },
+      );
+    }
+
+    if (!/^https?:\/\//i.test(imageUrl)) {
+      return NextResponse.json(
+        { ok: false, error: 'imageUrl debe ser una URL publica de Cloudinary' },
         { status: 400 },
       );
     }
@@ -127,7 +140,6 @@ export async function POST(request: Request) {
 
     const prompt = buildPrompt(treatment);
 
-    // En produccion, imageUrl debe ser una URL publica de Cloudinary o similar.
     const replicateResponse = await fetch(REPLICATE_ENDPOINT, {
       method: 'POST',
       headers: {
@@ -150,10 +162,15 @@ export async function POST(request: Request) {
     let prediction = await parseReplicateResponse(replicateResponse);
 
     if (!replicateResponse.ok) {
+      const statusMessage =
+        replicateResponse.status === 402
+          ? 'Replicate rechazo la solicitud por saldo, billing o acceso insuficiente en la cuenta'
+          : `Replicate rechazo la solicitud (HTTP ${replicateResponse.status})`;
+
       return NextResponse.json(
         {
           ok: false,
-          error: replicateErrorMessage(prediction, 'Replicate rechazo la solicitud'),
+          error: replicateErrorMessage(prediction, statusMessage),
         },
         { status: 502 },
       );
@@ -170,7 +187,6 @@ export async function POST(request: Request) {
     }
 
     let resultImageUrl = extractResultImageUrl(prediction.output);
-
     const pollingUrl = prediction.urls?.get;
 
     if (!resultImageUrl && pollingUrl) {
@@ -208,29 +224,11 @@ export async function POST(request: Request) {
       );
     }
 
-    let simulacionGuardada = null;
-    try {
-      simulacionGuardada = await prisma.simulacion.create({
-        data: {
-          tratamiento: treatment,
-          imagenOriginalUrl: imageUrl,
-          imagenProcesadaUrl: resultImageUrl,
-          pacienteId: pacienteId, 
-        },
-      });
-      console.log("✅ Historial guardado en BD local. ID:", simulacionGuardada.id);
-    } catch (dbError) {
-      console.error("Error al guardar el historial en SQLite:", dbError);
-      // Solo registramos el error en consola, pero no detenemos el sistema. 
-      // El usuario igual verá su imagen en pantalla aunque la BD falle.
-    }
-
     return NextResponse.json({
       ok: true,
       originalImageUrl: imageUrl,
       resultImageUrl,
       treatment,
-      simulacionId: simulacionGuardada?.id,
     });
   } catch (error) {
     const message =

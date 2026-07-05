@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { Upload, Eye, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ComparisonSlider } from './comparison-slider';
 import { ProcessingOverlay } from './processing-overlay';
 import { useToast } from '@/components/ui/use-toast';
@@ -16,77 +16,196 @@ interface ImageViewerProps {
   hoveredTool?: string | null;
 }
 
+type CloudinaryUploadResponse = {
+  ok?: boolean;
+  imageUrl?: string;
+  error?: string;
+};
+
 type SimulationResponse = {
   ok?: boolean;
   resultImageUrl?: string;
   error?: string;
 };
 
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
+
+async function uploadImageToCloudinary(file: File) {
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  if (cloudName && uploadPreset) {
+    formData.append('upload_preset', uploadPreset);
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: 'POST',
+        body: formData,
+      },
+    );
+
+    const data = (await response.json()) as {
+      secure_url?: string;
+      error?: { message?: string };
+    };
+
+    if (!response.ok || !data.secure_url) {
+      throw new Error(data.error?.message || 'Cloudinary no pudo subir la imagen');
+    }
+
+    return data.secure_url;
+  }
+
+  const response = await fetch('/api/cloudinary/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const data = (await response.json()) as CloudinaryUploadResponse;
+
+  if (!response.ok || !data.ok || !data.imageUrl) {
+    throw new Error(data.error || 'Error al subir la imagen a Cloudinary');
+  }
+
+  return data.imageUrl;
+}
+
 export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: ImageViewerProps) {
   const [image, setImage] = useState<string | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [simulatedImage, setSimulatedImage] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAIInsights, setShowAIInsights] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewObjectUrlRef = useRef<string | null>(null);
   const { toast } = useToast();
+
+  const displayImage = previewImage ?? image;
+
+  useEffect(() => {
+    return () => {
+      if (previewObjectUrlRef.current) {
+        URL.revokeObjectURL(previewObjectUrlRef.current);
+      }
+    };
+  }, []);
+
+  const clearPreviewObjectUrl = () => {
+    if (previewObjectUrlRef.current) {
+      URL.revokeObjectURL(previewObjectUrlRef.current);
+      previewObjectUrlRef.current = null;
+    }
+  };
+
+  const validateImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: 'Error',
+        description: 'Por favor selecciona una imagen valida',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    if (file.size > MAX_IMAGE_SIZE) {
+      toast({
+        title: 'Error',
+        description: 'La imagen no debe superar los 10 MB',
+        variant: 'destructive',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSelectedFile = async (file: File) => {
+    if (!validateImageFile(file)) {
+      return;
+    }
+
+    clearPreviewObjectUrl();
+    const localPreviewUrl = URL.createObjectURL(file);
+    previewObjectUrlRef.current = localPreviewUrl;
+
+    setPreviewImage(localPreviewUrl);
+    setImage(null);
+    setSimulatedImage(null);
+    setShowComparison(false);
+    setShowAIInsights(false);
+    setIsUploading(true);
+
+    try {
+      const cloudinaryUrl = await uploadImageToCloudinary(file);
+
+      clearPreviewObjectUrl();
+      setPreviewImage(cloudinaryUrl);
+      setImage(cloudinaryUrl);
+      onImageUpload?.(file);
+      toast({ title: 'Exito', description: 'Imagen subida a Cloudinary correctamente' });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Error al subir la imagen a Cloudinary';
+
+      clearPreviewObjectUrl();
+      setPreviewImage(null);
+      setImage(null);
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && !file.type.startsWith('image/')) {
-      toast({ title: "Error", description: 'Por favor selecciona una imagen válida', variant: 'destructive' });
-      return;
-    }
+
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result;
-        if (typeof result === 'string') {
-          setImage(result);
-          toast({ title: "Éxito", description: 'Imagen cargada correctamente' });
-        }
-      };
-      reader.onerror = () => {
-        toast({ title: "Error", description: 'Error al leer la imagen', variant: 'destructive' });
-      };
-      reader.readAsDataURL(file);
-      onImageUpload?.(file);
+      void handleSelectedFile(file);
     }
+
+    e.target.value = '';
   };
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
+
     const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result;
-        if (typeof result === 'string') {
-          setImage(result);
-          toast({ title: "Éxito", description: 'Imagen cargada correctamente' });
-        }
-      };
-      reader.onerror = () => {
-        toast({ title: "Error", description: 'Error al leer la imagen', variant: 'destructive' });
-      };
-      reader.readAsDataURL(file);
-      onImageUpload?.(file);
-    } else {
-      toast({ title: "Error", description: 'Por favor arrastra una imagen válida', variant: 'destructive' });
+
+    if (file) {
+      void handleSelectedFile(file);
+      return;
     }
+
+    toast({
+      title: 'Error',
+      description: 'Por favor arrastra una imagen valida',
+      variant: 'destructive',
+    });
   };
 
   const handleProcessing = async () => {
     const treatment = selectedTreatment ?? hoveredTool;
 
     if (!image) {
-      toast({ title: "Información", description: 'Por favor, carga una imagen primero' });
+      toast({
+        title: 'Informacion',
+        description: 'Primero sube la imagen a Cloudinary',
+      });
       return;
     }
 
     if (!treatment) {
-      toast({ title: "Información", description: 'Selecciona un tratamiento antes de procesar' });
+      toast({
+        title: 'Informacion',
+        description: 'Selecciona un tratamiento antes de procesar',
+      });
       return;
     }
 
@@ -94,8 +213,6 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
     setShowAIInsights(false);
 
     try {
-      // Para produccion, image deberia ser una URL publica de Cloudinary o similar.
-      // Replicate necesita poder descargar la imagen desde su backend.
       const response = await fetch('/api/ai/simulate', {
         method: 'POST',
         headers: {
@@ -116,12 +233,12 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
       setSimulatedImage(data.resultImageUrl);
       setShowComparison(true);
       setShowAIInsights(true);
-      toast({ title: "Completado", description: 'Simulación completada con éxito' });
+      toast({ title: 'Completado', description: 'Simulacion completada con exito' });
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Error al procesar la imagen';
 
-      toast({ title: "Error", description: message, variant: 'destructive' });
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setIsProcessing(false);
     }
@@ -131,15 +248,17 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
     if (simulatedImage) {
       setShowComparison(!showComparison);
     } else {
-      toast({ title: "Información", description: 'Por favor, procesa la imagen primero' });
+      toast({ title: 'Informacion', description: 'Por favor, procesa la imagen primero' });
     }
   };
 
-  // Función de reinicio profundo sin romper la UI
   const handleResetSimulator = () => {
+    clearPreviewObjectUrl();
     setImage(null);
+    setPreviewImage(null);
     setSimulatedImage(null);
     setShowComparison(false);
+    setIsUploading(false);
     setIsProcessing(false);
     setShowAIInsights(false);
   };
@@ -153,7 +272,7 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
       style={{ containIntrinsicSize: 'auto 400px' }}
     >
       <AnimatePresence mode="wait">
-        {!image ? (
+        {!displayImage ? (
           <motion.div
             key="upload"
             initial={{ opacity: 0, y: 20 }}
@@ -172,7 +291,7 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
                 Subir Imagen
               </h3>
               <p className="text-sm text-muted-foreground mb-4 text-balance">
-                Arrastra tu foto aquí o haz clic para seleccionar
+                Arrastra tu foto aqui o haz clic para seleccionar
               </p>
               <input
                 ref={fileInputRef}
@@ -198,33 +317,26 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
             transition={{ duration: 0.4 }}
             className="w-full"
           >
-            {/* Processing Overlay */}
-            {isProcessing && (
-              <ProcessingOverlay
-                isVisible={isProcessing}
-              />
-            )}
+            {isProcessing && <ProcessingOverlay isVisible={isProcessing} />}
 
-            {/* CÓDIGO ORIGINAL RECUPERADO DE LA VISUALIZACIÓN DE IMAGEN */}
             <div className="relative">
-              {showComparison && simulatedImage ? (
+              {showComparison && image && simulatedImage ? (
                 <ComparisonSlider
-                  beforeImage={image ?? ""}
-                  afterImage={simulatedImage ?? ""}
-                  title="Comparación de Simulación"
+                  beforeImage={image}
+                  afterImage={simulatedImage}
+                  title="Comparacion de Simulacion"
                 />
               ) : (
                 <>
                   <div className="relative aspect-square rounded-3xl overflow-hidden bg-background border border-border/30">
                     <motion.img
                       layoutId="main-image"
-                      src={image ?? undefined}
+                      src={displayImage}
                       alt="Uploaded"
                       className="w-full h-full object-contain"
                     />
-                    <FaceMappingOverlay isVisible={!!image} hoveredTool={hoveredTool ?? null} />
+                    <FaceMappingOverlay isVisible={!!displayImage} hoveredTool={hoveredTool ?? null} />
                   </div>
-                  {/* Botón original de la esquina superior derecha con reset profundo */}
                   <button
                     onClick={handleResetSimulator}
                     className="absolute top-4 right-4 bg-background/80 backdrop-blur text-foreground p-2 rounded-full hover:bg-background transition-colors z-10"
@@ -235,15 +347,18 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
               )}
             </div>
 
-            {/* Action Buttons */}
             <div className="mt-6 space-y-3">
               <Button
-                disabled={isProcessing}
+                disabled={isUploading || isProcessing || !image}
                 onClick={handleProcessing}
                 className="w-full px-4 py-6 bg-primary text-primary-foreground rounded-3xl font-medium flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors disabled:opacity-50"
               >
                 <Lightbulb size={18} />
-                {isProcessing ? 'Procesando...' : 'Procesar Simulación'}
+                {isUploading
+                  ? 'Subiendo a Cloudinary...'
+                  : isProcessing
+                    ? 'Procesando...'
+                    : 'Procesar Simulacion'}
               </Button>
 
               <Button
@@ -252,14 +367,13 @@ export function ImageViewer({ onImageUpload, selectedTreatment, hoveredTool }: I
                 className="w-full px-4 py-6 bg-secondary text-secondary-foreground rounded-3xl font-medium flex items-center justify-center gap-2 hover:bg-secondary/90 transition-colors disabled:opacity-50"
               >
                 <Eye size={18} />
-                {showComparison ? 'Ocultar Comparación' : 'Comparar Antes/Después'}
+                {showComparison ? 'Ocultar Comparacion' : 'Comparar Antes/Despues'}
               </Button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* AI Insights Panel */}
       <AIInsightsPanel
         isVisible={showAIInsights}
         onClose={() => setShowAIInsights(false)}
