@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { ok: false, error: 'La imagen no debe superar los 10 MB' },
+        { ok: false, error: 'La imagen no debe superar los 10 MB despues de comprimirse' },
         { status: 400 },
       );
     }

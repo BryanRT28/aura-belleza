@@ -69,19 +69,30 @@ export function TreatmentsCatalog({
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.15 }}
+          variants={{
+            hidden: { opacity: 1 },
+            visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+          }}
+          className="grid grid-cols-1 md:grid-cols-2 gap-5"
+        >
           {treatments.map((treatment, index) => {
             const isSelected = selectedTreatment === treatment.toolName;
 
             return (
             <motion.div
               key={treatment.name}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1 }}
+              variants={{
+                hidden: { opacity: 0, y: 24, scale: 0.97 },
+                visible: { opacity: 1, y: 0, scale: 1 },
+              }}
               animate={{ y: isSelected ? -4 : 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -4 }}
+              transition={{ duration: 0.58, ease: 'easeOut' }}
+              whileHover={{ y: -6, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
             >
               <Card
                 role="button"
@@ -104,13 +115,17 @@ export function TreatmentsCatalog({
                   <span className="px-3 py-1 rounded-full border border-border bg-background/70 text-xs font-medium text-muted-foreground">
                     {treatment.category}
                   </span>
-                  <span className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
+                  <motion.span
+                    animate={isSelected ? { rotate: [0, -10, 0], scale: [1, 1.12, 1] } : { rotate: 0, scale: 1 }}
+                    transition={{ duration: 0.35 }}
+                    className={`flex items-center justify-center w-8 h-8 rounded-full transition-colors ${
                     isSelected
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-secondary/50 text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground'
-                  }`}>
+                  }`}
+                  >
                     {isSelected ? <Check size={17} /> : <ArrowUpRight size={17} />}
-                  </span>
+                  </motion.span>
                 </div>
                 <h3 className={`text-xl font-semibold mt-5 mb-2 ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                   {treatment.name}
@@ -139,7 +154,7 @@ export function TreatmentsCatalog({
             </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

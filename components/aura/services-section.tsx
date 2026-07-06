@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { ArrowRight, Check, Sparkles, Droplets, Leaf } from 'lucide-react';
 
 const services = [
@@ -27,7 +28,7 @@ const services = [
   },
 ];
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -38,12 +39,13 @@ const containerVariants = {
   },
 };
 
-const cardVariants = {
-  hidden: { opacity: 0, y: 20 },
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 26, scale: 0.96 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6 },
+    scale: 1,
+    transition: { duration: 0.65, ease: 'easeOut' },
   },
 };
 
@@ -82,16 +84,27 @@ export function ServicesSection() {
               <motion.div
                 key={index}
                 variants={cardVariants}
-                whileHover={{ y: -6 }}
+                whileHover={{ y: -8, scale: 1.015 }}
+                whileTap={{ scale: 0.99 }}
                 className="group relative overflow-hidden bg-card border border-border rounded-3xl p-8 hover:border-primary hover:shadow-xl hover:shadow-primary/10 transition-all duration-300"
               >
                 <div className="flex items-start justify-between gap-4 mb-6">
-                  <div className="p-4 bg-secondary/20 rounded-2xl w-fit group-hover:bg-primary/10 transition-colors duration-300">
+                  <motion.div
+                    whileHover={{ rotate: -6, scale: 1.08 }}
+                    transition={{ type: 'spring', stiffness: 320, damping: 18 }}
+                    className="p-4 bg-secondary/20 rounded-2xl w-fit group-hover:bg-primary/10 transition-colors duration-300"
+                  >
                     <Icon className="w-8 h-8 text-primary" />
-                  </div>
-                  <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  </motion.div>
+                  <motion.span
+                    initial={{ opacity: 0, x: 10 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.25 + index * 0.08 }}
+                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold"
+                  >
                     {service.label}
-                  </span>
+                  </motion.span>
                 </div>
 
                 {/* Title */}
@@ -105,13 +118,20 @@ export function ServicesSection() {
                 </p>
 
                 <ul className="mt-5 space-y-2">
-                  {service.benefits.map((benefit) => (
-                    <li key={benefit} className="flex items-center gap-2 text-sm text-foreground/80">
+                  {service.benefits.map((benefit, benefitIndex) => (
+                    <motion.li
+                      key={benefit}
+                      initial={{ opacity: 0, x: -8 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.25 + benefitIndex * 0.08 }}
+                      className="flex items-center gap-2 text-sm text-foreground/80"
+                    >
                       <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary/10 text-primary">
                         <Check size={12} strokeWidth={3} />
                       </span>
                       {benefit}
-                    </li>
+                    </motion.li>
                   ))}
                 </ul>
 

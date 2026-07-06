@@ -61,7 +61,7 @@ export function Hero() {
           </button>
           <Button 
             className="!bg-[#d4af37] !text-[#2c2c2c] hover:!bg-[#bfa030] hover:!text-[#2c2c2c] font-semibold px-8 py-6 rounded-full shadow-lg transition-all duration-300 text-base"
-            onClick={() => window.location.hash = '#simulador'}
+            onClick={() => window.location.hash = '#espejo-inteligente'}
           >
             Agendar Cita
           </Button>

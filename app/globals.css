@@ -171,6 +171,13 @@
   p {
     @apply leading-relaxed;
   }
+  button:focus-visible,
+  [role='button']:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--ring) 75%, transparent);
+    outline-offset: 3px;
+  }
   /* Prevent Cumulative Layout Shift (CLS) */
   svg {
     backface-visibility: hidden;
